@@ -103,15 +103,17 @@ singlechannel.plot(outfile="dayplot.png")
 from obspy import read
 st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
 
-st.plot(type="dayplot", interval=60,
+st.plot(type="dayplot", interval=15,
     right_vertical_labels=False,
     vertical_scaling_range=5e3, one_tick_per_line=True,
-    color=["k", "r", "b", "g"],dpi=100,
+    color=["k", "r", "b", "g"], dpi=100, size=(800, 600),
     show_y_UTC_label=False,
     events={"min_magnitude": 6.5},
     tick_rotation=15, tick_format="%H:%M:%S",
-    number_of_ticks=8,
+    number_of_ticks=12,
     bgcolor="white",face_color="red",transparent=True,
+    starttime=None,endtime=None,
+    localization_dict={'time in': "temps en", 'seconds': "secondes", 'minutes': "minutes", 'hours': "heures"}, data_unit="$\\frac{m}{s}$",
     draw=True,show=True)
 
 # 1.4.6 Plotting a Record Section
