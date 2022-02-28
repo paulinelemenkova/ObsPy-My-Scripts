@@ -110,11 +110,6 @@ from obspy import read
 #st.plot(type="section", dist_degree=True)
 st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
 st.filter("lowpass", freq=0.1, corners=2)
-st.filter("highpass", freq=0.1, corners=2)
-st.filter("bandpass", freqmin=0.1, freqmax=0.4, corners=4)
-# Butterworth-Bandstop Filter
-st.filter("bandstop", freqmin=0.1, freqmax=0.4, corners=4)
-st.filter("lowpass_cheby_2", freq=0.1)
 
 # minimal example
 st.plot(type="dayplot", interval=60,
@@ -144,12 +139,80 @@ st.plot(type="dayplot", interval=15,
 st.plot(type="section")
 # To plot a record section the ObsPy header trace.stats.distance (Offset) must be defined in meters
 
-#1.4.7 Plot & Color Options
+# 1.4.7 Plot & Color Options
+# 1.4.8 Custom Plotting using Matplotlib
+import matplotlib.pyplot as plt
+from obspy import read
+st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
+tr = st[0]
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ax.plot(tr.times("matplotlib"), tr.data, "b-")
+ax.xaxis_date()
+fig.autofmt_xdate()
+plt.show()
 
 
+# 1.5 Retrieving Data from Data Centers
+# 1.5.1 The FDSN Web Services
+# 1.5.2 ArcLink
+# 1.5.3 IRIS Web Services
+# 1.5.4 Earthworm Wave Server
+# 1.5.5 NERIES Web Services
+# 1.5.6 NEIC
+# 1.5.7 SeedLink
+# 1.5.8 Syngine Service
 
+# 1.6 Filtering Seismograms
+import numpy as np
+import matplotlib.pyplot as plt
+import obspy
 
+# Read the seismogram
+st = obspy.read("https://examples.obspy.org/RJOB_061005_072159.ehz.new")
+# There is only one trace in the Stream object, let’s work on that trace...
+tr = st[0]
+# Filtering with a lowpass on a copy of the original Trace
+tr_filt = tr.copy()
+tr_filt.filter("lowpass", freq=1.0, corners=2, zerophase=True)
 
+# Now let’s plot the raw and filtered data...
+t = np.arange(0, tr.stats.npts / tr.stats.sampling_rate, tr.stats.delta)
+plt.subplot(211)
+plt.plot(t, tr.data, "blue")
+plt.ylabel("Raw Data")
+plt.subplot(212)
+plt.plot(t, tr_filt.data, "red")
+plt.ylabel("Lowpassed Data")
+plt.xlabel("Time [s]")
+plt.suptitle(tr.stats.starttime)
+plt.show()
+
+st.filter("lowpass", freq=0.1, corners=2)
+st.filter("highpass", freq=0.1, corners=2)
+st.filter("bandpass", freqmin=0.1, freqmax=0.4, corners=4)
+# Butterworth-Bandstop Filter
+st.filter("bandstop", freqmin=0.1, freqmax=0.4, corners=4)
+st.filter("lowpass_cheby_2", freq=0.1)
+
+# my example
+st.plot(type="dayplot", interval=15,
+    vertical_scaling_range=5e3, one_tick_per_line=True,
+    color=["purple", "r", "b", "g"], dpi=100, size=(800, 600),
+    show_y_UTC_label=True,
+    events={"min_magnitude": 6.5},
+    tick_rotation=15, tick_format="%H:%M:%S",
+    number_of_ticks=12,
+    bgcolor="white",face_color="red",transparent=True,
+    starttime=None,endtime=None,
+    localization_dict={'time in': "temps en", 'seconds': "secondes", 'minutes': "minutes", 'hours': "heures"}, data_unit="$\\frac{m}{s}$",
+    x_labels_size=9, y_labels_size=9, title_size=11,
+    subplots_adjust_left=0.10, subplots_adjust_right=0.92,
+    subplots_adjust_top=0.93,subplots_adjust_bottom=0.1,
+    right_vertical_labels=False,
+    grid_color="gray", grid_linewidth=0.5,grid_linestyle=":",
+#    title="My Title",
+    draw=True,show=True)
 
 # pip install cartoply
 # import cartopy.crs as ccrs
@@ -157,3 +220,40 @@ from obspy import read_inventory
 net = read_inventory()[0]
 Network.plot(projection='global', resolution='l', continent_fill_color='0.9', water_fill_color='1.0', marker='v', size=225, label=True, color='#b15928', time=None, show=True, outfile=None, method=basemap, fig=None, **kwargs)[source]
 
+# 1.7 Downsampling Seismograms
+import numpy as np
+import matplotlib.pyplot as plt
+import obspy
+# Read the seismogram
+st = obspy.read("https://examples.obspy.org/RJOB_061005_072159.ehz.new")
+# There is only one trace in the Stream object, let’s work on that trace...
+tr = st[0]
+
+# Decimate the 200 Hz data by a factor of 4 to 50 Hz. Note that this
+# automatically includes a lowpass filtering with corner frequency 20 Hz.
+# We work on a copy of the original data just to demonstrate the effects of # downsampling.
+tr_new = tr.copy()
+tr_new.decimate(factor=4, strict_length=False)
+
+# For comparison also only filter the original data (same filter options as in automatically applied filtering during downsampling, corner frequency
+# 0.4 * new sampling rate)
+tr_filt = tr.copy()
+tr_filt.filter("lowpass", freq=0.4 * tr.stats.sampling_rate / 4.0)
+
+# Now let’s plot the raw and filtered data...
+t = np.arange(0, tr.stats.npts / tr.stats.sampling_rate, tr.stats.delta)
+t_new = np.arange(0, tr_new.stats.npts / tr_new.stats.sampling_rate, tr_new.stats.delta)
+
+plt.plot(t, tr.data, "k", label="Raw", alpha=0.3)
+plt.plot(t, tr_filt.data, "b", label="Lowpassed", alpha=0.7)
+plt.plot(t_new, tr_new.data, "r", label="Lowpassed/Downsampled", alpha=0.7)
+plt.xlabel("Time [s]")
+plt.xlim(82, 83.5)
+plt.suptitle(tr.stats.starttime)
+plt.legend()
+plt.show()
+
+# 1.8 Merging Seismograms
+import numpy as np
+import matplotlib.pyplot as plt
+import obspy
