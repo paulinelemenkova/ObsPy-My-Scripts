@@ -106,6 +106,22 @@ st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
 
 #https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.plot.html#obspy.core.stream.Stream.plot
 
+from obspy import read
+#st.plot(type="section", dist_degree=True)
+st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
+st.filter("lowpass", freq=0.1, corners=2)
+st.filter("highpass", freq=0.1, corners=2)
+st.filter("bandpass", freqmin=0.1, freqmax=0.4, corners=4)
+# Butterworth-Bandstop Filter
+st.filter("bandstop", freqmin=0.1, freqmax=0.4, corners=4)
+st.filter("lowpass_cheby_2", freq=0.1)
+
+# minimal example
+st.plot(type="dayplot", interval=60,
+    right_vertical_labels=False, vertical_scaling_range=5e3,
+    one_tick_per_line=True, color=["k", "r", "b", "g"], show_y_UTC_label=False, events={"min_magnitude": 6.5})
+
+# my example
 st.plot(type="dayplot", interval=15,
     vertical_scaling_range=5e3, one_tick_per_line=True,
     color=["purple", "r", "b", "g"], dpi=100, size=(800, 600),
@@ -121,13 +137,19 @@ st.plot(type="dayplot", interval=15,
     subplots_adjust_top=0.93,subplots_adjust_bottom=0.1,
     right_vertical_labels=False,
     grid_color="gray", grid_linewidth=0.5,grid_linestyle=":",
-#    title="Title",
+#    title="My Title",
     draw=True,show=True)
 
 # 1.4.6 Plotting a Record Section
 st.plot(type="section")
+# To plot a record section the ObsPy header trace.stats.distance (Offset) must be defined in meters
 
-    
+#1.4.7 Plot & Color Options
+
+
+
+
+
 
 # pip install cartoply
 # import cartopy.crs as ccrs
