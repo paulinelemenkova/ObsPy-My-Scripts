@@ -99,21 +99,29 @@ threechannels.plot(outfile="threechannels_300_3200.png",dpi=300,size=(3200, 2400
 # 1.4.5 Creating a One-Day Plot
 singlechannel.plot(type="dayplot")
 singlechannel.plot(outfile="dayplot.png")
+
 # Event information can be included in the plot as well (experimental feature, syntax might change):
 from obspy import read
 st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
 
+#https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.plot.html#obspy.core.stream.Stream.plot
+
 st.plot(type="dayplot", interval=15,
-    right_vertical_labels=False,
     vertical_scaling_range=5e3, one_tick_per_line=True,
-    color=["k", "r", "b", "g"], dpi=100, size=(800, 600),
-    show_y_UTC_label=False,
+    color=["purple", "r", "b", "g"], dpi=100, size=(800, 600),
+    show_y_UTC_label=True,
     events={"min_magnitude": 6.5},
     tick_rotation=15, tick_format="%H:%M:%S",
     number_of_ticks=12,
     bgcolor="white",face_color="red",transparent=True,
     starttime=None,endtime=None,
     localization_dict={'time in': "temps en", 'seconds': "secondes", 'minutes': "minutes", 'hours': "heures"}, data_unit="$\\frac{m}{s}$",
+    x_labels_size=9, y_labels_size=9, title_size=11,
+    subplots_adjust_left=0.10, subplots_adjust_right=0.92,
+    subplots_adjust_top=0.93,subplots_adjust_bottom=0.1,
+    right_vertical_labels=False,
+    grid_color="gray", grid_linewidth=0.5,grid_linestyle=":",
+#    title="Title",
     draw=True,show=True)
 
 # 1.4.6 Plotting a Record Section
