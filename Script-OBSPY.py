@@ -399,3 +399,208 @@ plt.xlabel("Time [s]")
 plt.xlim(80, 90)
 plt.show()
 
+# Plotting seismograms
+import obspy
+st = obspy.read("https://examples.obspy.org/RJOB_061005_072159.ehz.new")
+st.spectrogram(log=True, title="BW.RJOB" + str(st[0].stats.starttime))
+
+# 1.12 Trigger/Picker Tutorial
+# 1.12.1 Reading Waveform Data
+from obspy.core import read
+st = read("https://examples.obspy.org/ev0_6.a01.gse2")
+#st = st.select(component="E")
+st = st.select(component="Z")
+tr = st[0]
+print(tr.stats)
+tr.plot(type="relative")
+
+# 1.12.3 Trigger Examples
+from obspy.core import read
+from obspy.signal.trigger import plot_trigger
+trace = read("https://examples.obspy.org/ev0_6.a01.gse2")[0]
+df = trace.stats.sampling_rate
+
+# Classic Sta Lta
+from obspy.signal.trigger import classic_sta_lta
+cft = classic_sta_lta(trace.data, int(5 * df), int(10 * df))
+plot_trigger(trace, cft, 1.5, 0.5)
+
+# Z-Detect
+from obspy.signal.trigger import z_detect
+cft = z_detect(trace.data, int(10 * df))
+plot_trigger(trace, cft, -0.4, -0.3)
+
+# Recursive Sta Lta
+from obspy.signal.trigger import recursive_sta_lta
+cft = recursive_sta_lta(trace.data, int(5 * df), int(10 * df))
+plot_trigger(trace, cft, 1.2, 0.5)
+
+# Carl-Sta-Trig
+from obspy.signal.trigger import carl_sta_trig
+cft = carl_sta_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
+plot_trigger(trace, cft, 20.0, -20.0)
+
+# Delayed Sta Lta
+from obspy.signal.trigger import delayed_sta_lta
+cft = delayed_sta_lta(trace.data, int(5 * df), int(10 * df))
+
+# 1.12.4 Network Coincidence Trigger Example
+from obspy.core import Stream, read
+st = Stream()
+files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
+    "BW.UH2..SHZ.D.2010.147.cut.slist.gz",
+    "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
+    "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
+    
+for filename in files: st += read("https://examples.obspy.org/" + filename)
+st.filter("bandpass", freqmin=10, freqmax=20) # optional prefiltering
+from obspy.signal.trigger import coincidence_trigger
+st2 = st.copy()
+trig = coincidence_trigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10)
+from pprint import pprint
+pprint(trig)
+st2 = st.copy()
+trig = coincidence_trigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10, details=True)
+pprint(trig[0])
+
+# 1.12.6 Picker Examples
+# Baer Picker
+from obspy.core import read
+from obspy.signal.trigger import pk_baer
+df = trace.stats.sampling_rate
+p_pick, phase_info = pk_baer(trace.data, df, 20, 60, 7.0, 12.0, 100, 100)
+print(p_pick)
+print(phase_info)
+print(p_pick / df)
+
+# 1.12.7 Advanced Example
+
+# 1.13 Poles and Zeros, Frequency Response
+import numpy as np
+import matplotlib.pyplot as plt
+from obspy.signal.invsim import paz_to_freq_resp
+poles = [-4.440 + 4.440j, -4.440 - 4.440j, -1.083 + 0.0j]
+zeros = [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j]
+scale_fac = 0.4
+h, f = paz_to_freq_resp(poles, zeros, scale_fac, 0.005, 16384, freq=True)
+plt.figure()
+plt.subplot(121)
+plt.loglog(f, abs(h))
+plt.xlabel("Frequency [Hz]")
+plt.ylabel("Amplitude")
+plt.subplot(122)
+phase = 2 * np.pi + np.unwrap(np.angle(h))
+plt.semilogx(f, phase)
+plt.xlabel("Frequency [Hz]")
+plt.ylabel("Phase [radian]")
+# ticks and tick labels at multiples of pi
+plt.yticks(
+    [0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi],
+    ["$0$", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$"])
+plt.ylim(-0.2, 2 * np.pi + 0.2)
+# title, centered above both subplots
+plt.suptitle("Frequency Response of LE-3D/1s Seismometer")
+# make more room in between subplots for the ylabel of right plot plt.subplots_adjust(wspace=0.3)
+plt.show()
+
+
+#--------------------------------------------------------------#
+from obspy import read
+st = read("traces_UCC19540128Gal_N_1113.mseed")
+print(st)
+
+
+# st.filter("lowpass", freq=0.1, corners=2)
+
+# minimal example
+st.plot(type="dayplot", interval=60,right_vertical_labels=False, one_tick_per_line=True, color=["k", "r", "b", "g"], show_y_UTC_label=False)
+
+# my example
+st.plot(type="dayplot", interval=15,
+    vertical_scaling_range=5e3, one_tick_per_line=True,
+    color=["purple", "r", "b", "g"], dpi=100, size=(800, 600),
+    show_y_UTC_label=True,
+    events={"min_magnitude": 6.5},
+    tick_rotation=15, tick_format="%H:%M:%S",
+    number_of_ticks=12,
+    bgcolor="white",face_color="red",transparent=True,
+    starttime=None,endtime=None,
+    localization_dict={'time in': "temps en", 'seconds': "secondes", 'minutes': "minutes", 'hours': "heures"}, data_unit="$\\frac{m}{s}$",
+    x_labels_size=9, y_labels_size=9, title_size=11,
+    subplots_adjust_left=0.10, subplots_adjust_right=0.92,
+    subplots_adjust_top=0.93,subplots_adjust_bottom=0.1,
+    right_vertical_labels=False,
+    grid_color="gray", grid_linewidth=0.5,grid_linestyle=":",
+#    title="My Title",
+    draw=True,show=True)
+
+# 1.4.6 Plotting a Record Section
+st.plot(type="section")
+# To plot a record section the ObsPy header trace.stats.distance (Offset) must be defined in meters
+
+# 1.4.7 Plot & Color Options
+# 1.4.8 Custom Plotting using Matplotlib
+import matplotlib.pyplot as plt
+from obspy import read
+st = read("https://examples.obspy.org/GR.BFO..LHZ.2012.108")
+tr = st[0]
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ax.plot(tr.times("matplotlib"), tr.data, "b-")
+ax.xaxis_date()
+fig.autofmt_xdate()
+plt.show()
+
+#--------------------------------------------------------------#
+
+from obspy import read
+st = read("traces_UCC19540128Gal_N_1113.mseed")
+
+# visualise selected traces by Matplotlib
+tr = st[0]
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ax.plot(tr.times("matplotlib"), tr.data, "b-")
+ax.xaxis_date()
+fig.autofmt_xdate()
+plt.show()
+
+tr = st[1]
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ax.plot(tr.times("matplotlib"), tr.data, "b-")
+ax.xaxis_date()
+fig.autofmt_xdate()
+plt.show()
+
+tr = st[2]
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ax.plot(tr.times("matplotlib"), tr.data, "b-")
+ax.xaxis_date()
+fig.autofmt_xdate()
+plt.show()
+
+print(tr.stats)
+tr.plot(type="relative")
+tr.data
+len(tr)
+tr.stats.station
+
+from obspy.core import read
+singlechannel = read("traces_UCC19540128Gal_N_1113.mseed")
+print(singlechannel)
+
+st.plot()
+
+#--------------------------------------------------------------#
+# Subplots
+plt.subplot(211)
+plt.plot(st[0], "blue")
+plt.ylabel("Trace 0")
+plt.subplot(212)
+plt.plot(st[1], "green")
+plt.ylabel("Trace 1")
+plt.xlabel("Time [s]")
+plt.suptitle("UCC 1113")
+plt.show()
